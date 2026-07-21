@@ -1,0 +1,18 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+terraform.tfvars
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+
+# Node
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
