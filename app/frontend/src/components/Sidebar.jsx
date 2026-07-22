@@ -5,13 +5,14 @@ function Sidebar() {
     <aside
       style={{
         width: "220px",
-        padding: "20px",
         background: "#f4f4f4",
+        padding: "20px",
       }}
     >
       <h3>Menu</h3>
 
       <ul style={{ listStyle: "none", padding: 0 }}>
+
         <li>
           <Link to="/">Dashboard</Link>
         </li>
@@ -21,9 +22,11 @@ function Sidebar() {
         </li>
 
         <li>
-          <Link to="/add-employee">Add Employee</Link>
+          <Link to="/about">About</Link>
         </li>
+
       </ul>
+
     </aside>
   );
 }
