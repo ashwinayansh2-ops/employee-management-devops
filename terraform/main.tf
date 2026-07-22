@@ -151,3 +151,7 @@ module "frontend_asg" {
   private_subnet2  = module.subnets_app.public_subnet_ids[1]
   target_group_arn = module.alb.target_group_arn
 }
+
+module "ecr" {
+  source = "./modules/ecr"
+}
