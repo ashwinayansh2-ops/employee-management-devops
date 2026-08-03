@@ -22,14 +22,14 @@ jobs:
           node -v
           npm -v
       - name: Install frontend Dependencies
-        working-directory: .app/frontend
+        working-directory: app/frontend
         run: npm install
 
       - name: Run Tests
-        working-directory: .app/frontend
+        working-directory: app/frontend
         run: npm test
 
       - name: Build Frontend
-        working-directory: .app/frontend
+        working-directory: app/frontend
         run: npm run build
 
