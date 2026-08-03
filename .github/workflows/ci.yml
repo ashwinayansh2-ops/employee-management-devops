@@ -59,3 +59,17 @@ jobs:
       - name: Upload to S3
         run: |
          aws s3 cp frontend.zip s3://employeeapplicationdst/frontend.zip
+
+      - name: Deploy frontend to ASG instances
+        run: |
+          aws ssm send-command \
+          --document-name "AWS-RunShellScript" \
+          --targets "Key=tag:Name,Values=FrontendServer_Dynatrace_TOKEN_1" \
+          --parameters commands='[
+          "aws s3 cp s3://employeeapplicationdst/frontend/frontend.zip /tmp/frontend.zip",
+          "rm -rf /tmp/frontend",
+          "mkdir -p /tmp/frontend",
+          "unzip -o /tmp/frontend.zip -d /tmp/frontend",
+          "sudo rm -rf /usr/share/nginx/html/*",
+          "sudo cp -r /tmp/frontend/dist/* /usr/share/nginx/html/",
+          "sudo systemctl restart nginx"]'
