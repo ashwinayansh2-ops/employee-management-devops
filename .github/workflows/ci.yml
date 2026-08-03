@@ -32,6 +32,11 @@ jobs:
       - name: Zip build
         working-directory: app/frontend
         run: zip -r frontend.zip dist
+        
+      - name: Verify ZIP
+        run: |
+         pwd
+         ls -lh
 
       - name: Upload to S3
         run: |
