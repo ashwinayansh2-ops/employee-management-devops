@@ -21,3 +21,13 @@ jobs:
         run: |
           node -v
           npm -v
+      - name: Install frontend Dependencies
+        run: npm ci
+
+      - name: Run Tests
+        run: npm test
+
+      - name: Build Frontend
+        working-directory: .app/frontend
+        run: npm run build
+
