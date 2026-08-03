@@ -64,7 +64,7 @@ jobs:
         run: |
           aws ssm send-command \
           --document-name "AWS-RunShellScript" \
-          --targets "Key=tag:Name,Values=FrontendServer_Dynatrace_TOKEN_1" \
+          --targets "Key=tag:Name,Values=frontend-asg" \
           --parameters commands='[
           "aws s3 cp s3://employeeapplicationdst/frontend.zip /tmp/frontend.zip",
           "rm -rf /tmp/frontend",
