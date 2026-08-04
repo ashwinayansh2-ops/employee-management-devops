@@ -60,6 +60,7 @@ jobs:
         run: |
          aws s3 cp frontend.zip s3://employeeapplicationdst/frontend.zip
 
+         
       - name: Deploy frontend to ASG instances
         run: |
           aws ssm send-command \
