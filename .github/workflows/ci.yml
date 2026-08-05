@@ -37,7 +37,7 @@ jobs:
         working-directory: app/frontend
         run: zip -r ../../frontend.zip dist
         
-        
+
       - name: Verify ZIP
         run: |
          pwd
@@ -47,6 +47,9 @@ jobs:
         run: |
           echo "Repository: $GITHUB_REPOSITORY"
           echo "Ref: $GITHUB_REF"
+      - name: Print role ARN
+        run: |
+         echo "${{ secrets.AWS_ROLE_ARN }}"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
