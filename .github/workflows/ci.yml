@@ -37,6 +37,7 @@ jobs:
         working-directory: app/frontend
         run: zip -r ../../frontend.zip dist
         
+        
       - name: Verify ZIP
         run: |
          pwd
