@@ -47,9 +47,17 @@ jobs:
         run: |
           echo "Repository: $GITHUB_REPOSITORY"
           echo "Ref: $GITHUB_REF"
-      - name: Print role ARN
-        run: |
-         echo "${{ secrets.AWS_ROLE_ARN }}"
+      
+      - name: Dump OIDC claims
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const core = require('@actions/core');
+            const token = await core.getIDToken("sts.amazonaws.com");
+            const payload = JSON.parse(
+              Buffer.from(token.split(".")[1], "base64").toString("utf8")
+            );
+            console.log(JSON.stringify(payload, null, 2));
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
