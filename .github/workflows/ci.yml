@@ -41,8 +41,7 @@ jobs:
         run: |
          pwd
          ls -lh
-         
-       
+                
       - name: Debug GitHub Context
         run: |
           echo "Repository: $GITHUB_REPOSITORY"
