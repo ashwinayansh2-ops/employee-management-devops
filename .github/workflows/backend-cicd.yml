@@ -110,3 +110,4 @@ jobs:
             "pm2 restart backend || pm2 start server.js --name backend"
           ]' \
           --region ${{ env.AWS_REGION }}
+          
