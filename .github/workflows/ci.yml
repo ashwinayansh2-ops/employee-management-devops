@@ -8,7 +8,8 @@ on:
 permissions:
     id-token: write
     contents: read
-
+env:
+  ASG_NAME: frontend-asg
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -76,22 +77,52 @@ jobs:
         run: |
          aws s3 cp frontend.zip s3://employeeapplicationdst/frontend.zip
                   
-      - name: Deploy frontend to ASG instances
+      # - name: Deploy frontend to ASG instances
+      #   run: |
+      #     COMMAND_ID=$(aws ssm send-command \
+      #     --document-name "AWS-RunShellScript" \
+      #     --targets "Key=tag:Name,Values=frontend-asg" \
+      #     --parameters commands='[
+      #     "aws s3 cp s3://employeeapplicationdst/frontend.zip /tmp/frontend.zip",
+      #     "rm -rf /tmp/frontend",
+      #     "mkdir -p /tmp/frontend",
+      #     "unzip -o /tmp/frontend.zip -d /tmp/frontend",
+      #     "sudo rm -rf /usr/share/nginx/html/*",
+      #     "sudo cp -r /tmp/frontend/dist/* /usr/share/nginx/html/",
+      #     "sudo systemctl restart nginx"]' \
+      #     --query "Command.CommandId" \
+      #     --output text)
+      #     echo "Command ID: $COMMAND_ID"
+      #     aws ssm list-command-invocations \
+      #       --command-id $COMMAND_ID \
+      #       --details
+
+      - name: Start Auto Scaling Instance Refresh
         run: |
-          COMMAND_ID=$(aws ssm send-command \
-          --document-name "AWS-RunShellScript" \
-          --targets "Key=tag:Name,Values=frontend-asg" \
-          --parameters commands='[
-          "aws s3 cp s3://employeeapplicationdst/frontend.zip /tmp/frontend.zip",
-          "rm -rf /tmp/frontend",
-          "mkdir -p /tmp/frontend",
-          "unzip -o /tmp/frontend.zip -d /tmp/frontend",
-          "sudo rm -rf /usr/share/nginx/html/*",
-          "sudo cp -r /tmp/frontend/dist/* /usr/share/nginx/html/",
-          "sudo systemctl restart nginx"]' \
-          --query "Command.CommandId" \
-          --output text)
-          echo "Command ID: $COMMAND_ID"
-          aws ssm list-command-invocations \
-            --command-id $COMMAND_ID \
-            --details
+          aws autoscaling start-instance-refresh \
+            --auto-scaling-group-name ${{env.ASG_NAME}} \
+            --preferences '{
+              "MinHealthyPercentage":50,
+              "InstanceWarmup":120
+            }'
+
+      - name: Wait for Instance Refresh to complete
+        run: |
+          while true; do
+            STATUS=$(aws autoscaling describe-instance-refreshes \
+              --auto-scaling-group-name ${{env.ASG_NAME}} \
+              --query "InstanceRefreshes[0].Status" \
+              --output text)
+
+            echo "Current Status: $STATUS"
+
+            if [ "$STATUS" = "Successful" ]; then
+              echo "Instance Refresh completed successfully."
+              exit 0
+            elif [ "$STATUS" = "Failed" ] || [ "$STATUS" = "Cancelled" ]; then
+              echo "Instance Refresh failed."
+              exit 1
+            fi
+
+            sleep 30
+          done
