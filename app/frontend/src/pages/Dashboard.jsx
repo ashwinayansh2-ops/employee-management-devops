@@ -13,7 +13,7 @@ function Dashboard() {
           }}
         >
           <h3>Total Employees</h3>
-          <h1>DST</h1>
+          <h1>Shashi</h1>
         </div>
 
         <div
