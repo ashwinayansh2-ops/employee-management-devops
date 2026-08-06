@@ -60,6 +60,12 @@ jobs:
     - name: Create backend package
       run: |
         cd app/backend
-        zip -r ../../backend.zip . \
+
+        zip -r ../../${{ env.BACKEND_ZIP }} . \
         -x "node_modules/*" \
         -x "*.log"
+
+        cd ../..
+
+        echo "Checking zip file:"
+        ls -lh ${{ env.BACKEND_ZIP }}
