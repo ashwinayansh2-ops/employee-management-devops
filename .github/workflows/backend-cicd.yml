@@ -118,3 +118,49 @@ jobs:
         aws ssm list-command-invocations \
           --command-id "$COMMAND_ID" \
           --details
+
+    - name: Upload backend zip to S3
+      run: |
+         aws s3 cp backend.zip \
+         s3://${{ env.S3_BUCKET }}/backend/backend.zip      
+
+ backend-deploy:
+  name: Deploy Backend
+  needs: backend-build
+  runs-on: ubuntu-latest
+
+  steps:
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Deploy to EC2 using SSM
+      run: |
+        COMMAND_ID=$(aws ssm send-command \
+          --document-name "AWS-RunShellScript" \
+          --targets "Key=tag:Name,Values=employee-backend" \
+          --parameters 'commands=[
+            "mkdir -p /opt/backend",
+            "cd /opt/backend",
+            "aws s3 cp s3://'${{ env.S3_BUCKET }}'/backend/backend.zip .",
+            "rm -rf app",
+            "mkdir app",
+            "unzip -o backend.zip -d app",
+            "cd app",
+            "npm ci --omit=dev",
+            "pm2 restart backend || pm2 start src/server.js --name backend"
+          ]' \
+          --query "Command.CommandId" \
+          --output text)
+
+        echo "Command ID: $COMMAND_ID"
+
+        aws ssm wait command-executed \
+          --command-id "$COMMAND_ID" \
+          --instance-id i-0c6b45290a7be6654
+
+        aws ssm list-command-invocations \
+          --command-id "$COMMAND_ID" \
+          --details
