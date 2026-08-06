@@ -43,7 +43,7 @@ jobs:
 
 
       - name: Run tests
-        working-directory: backend
+        working-directory: app/backend
         run: |
           if [ -f package.json ]; then
             npm test || true
