@@ -84,7 +84,7 @@ jobs:
     - name: Upload backend zip to S3
       run: |
         aws s3 cp ${{ env.BACKEND_ZIP }} \
-        s3://${{ env.S3_BUCKET }}/backend/${{ env.BACKEND_ZIP }}
+        s3://${{ env.S3_BUCKET }}/${{ env.BACKEND_ZIP }}
 
 
     - name: Verify S3 upload
