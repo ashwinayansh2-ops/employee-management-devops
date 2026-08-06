@@ -4,7 +4,9 @@ on:
   push:
     branches:
       - main
-  
+    paths: 
+      - "app/backend/**"
+
 permissions:
   id-token: write
   contents: read
@@ -23,9 +25,14 @@ jobs:
 
     steps:
 
+      - name: Building Backend
+        run: |
+         cd app/backend
+         npm install
+         npm run build
+
       - name: Checkout code
         uses: actions/checkout@v4
-
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
