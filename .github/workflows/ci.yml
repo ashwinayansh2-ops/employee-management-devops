@@ -1,10 +1,11 @@
-name: Employee Management CI
+name: Frontend CI/CD
 
 on:
   push:
     branches:
       - main
-
+    paths: 
+      - "app/frontend/**"
 permissions:
     id-token: write
     contents: read
@@ -105,7 +106,7 @@ jobs:
               "MinHealthyPercentage":50,
               "InstanceWarmup":120
             }'
-            
+
 
       - name: Wait for Instance Refresh to complete
         run: |
