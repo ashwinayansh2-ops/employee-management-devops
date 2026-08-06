@@ -27,7 +27,7 @@ jobs:
 
       - name: Building Backend
         run: |
-         cd backend
+         cd ../app/backend
          npm install
          npm run build
 
