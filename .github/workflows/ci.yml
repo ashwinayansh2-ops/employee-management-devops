@@ -62,7 +62,7 @@ jobs:
           console.log("REPOSITORY:", payload.repository);
           console.log("REF:", payload.ref);
 
-          
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -78,7 +78,7 @@ jobs:
                   
       - name: Deploy frontend to ASG instances
         run: |
-          aws ssm send-command \
+          COMMAND_ID=$(aws ssm send-command \
           --document-name "AWS-RunShellScript" \
           --targets "Key=tag:Name,Values=frontend-asg" \
           --parameters commands='[
@@ -88,4 +88,10 @@ jobs:
           "unzip -o /tmp/frontend.zip -d /tmp/frontend",
           "sudo rm -rf /usr/share/nginx/html/*",
           "sudo cp -r /tmp/frontend/dist/* /usr/share/nginx/html/",
-          "sudo systemctl restart nginx"]'
+          "sudo systemctl restart nginx"]' \
+          --query "Command.CommandId" \
+          --output text)
+          echo "Command ID: $COMMAND_ID"
+          aws ssm list-command-invocations \
+            --command-id $COMMAND_ID \
+            --details
