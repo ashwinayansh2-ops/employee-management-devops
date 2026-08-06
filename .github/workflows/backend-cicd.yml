@@ -75,3 +75,18 @@ jobs:
       with:
        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Verify AWS identity
+      run: |
+       aws sts get-caller-identity
+
+
+    - name: Upload backend zip to S3
+      run: |
+        aws s3 cp ${{ env.BACKEND_ZIP }} \
+        s3://${{ env.S3_BUCKET }}/backend/${{ env.BACKEND_ZIP }}
+
+
+    - name: Verify S3 upload
+      run: |
+       aws s3 ls s3://${{ env.S3_BUCKET }}/backend/
