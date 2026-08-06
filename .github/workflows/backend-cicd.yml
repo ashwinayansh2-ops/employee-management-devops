@@ -69,3 +69,9 @@ jobs:
 
         echo "Checking zip file:"
         ls -lh ${{ env.BACKEND_ZIP }}
+
+    - name: Configure AWS credentials using OIDC
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+       role-to-assume: arn:aws:iam::843089371063:role/github-actions-role
+       aws-region: ${{ env.AWS_REGION }}
