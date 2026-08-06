@@ -17,96 +17,49 @@ env:
 
 jobs:
 
-  backend-build:
+ backend-build:
 
-    name: Build Backend
-    runs-on: ubuntu-latest
+  name: Build Backend
+  runs-on: ubuntu-latest
 
-    steps:
+  steps:
 
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: app/backend/package-lock.json
+    - name: Checkout code
+      uses: actions/checkout@v4
 
 
-      - name: Install dependencies
-        working-directory: app/backend
-        run: npm ci
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: npm
+        cache-dependency-path: app/backend/package-lock.json
 
 
-      - name: Build Backend
-        working-directory: app/backend
-        run: npm run build
+    - name: Install dependencies
+      working-directory: app/backend
+      run: npm ci
 
 
-      - name: Run tests
-        working-directory: app/backend
-        run: |
-          if [ -f package.json ]; then
-            npm test || true
-          fi
+    - name: Validate Backend
+      working-directory: app/backend
+      run: |
+        node --check src/server.js
 
 
-      - name: Create backend package
-        run: |
-          cd app/backend
-          zip -r ../../${{ env.BACKEND_ZIP }} . \
-          -x "node_modules/*" \
-          -x "*.log"
+    - name: Run tests
+      working-directory: app/backend
+      run: |
+        if npm run | grep -q "test"; then
+          npm test
+        else
+          echo "No tests configured, skipping"
+        fi
 
 
-      - name: Configure AWS credentials using OIDC
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::<ACCOUNT_ID>:role/github-actions-role
-          aws-region: ${{ env.AWS_REGION }}
-
-
-      - name: Upload backend artifact to S3
-        run: |
-          aws s3 cp ${{ env.BACKEND_ZIP }} \
-          s3://${{ env.S3_BUCKET }}/backend/${{ env.BACKEND_ZIP }}
-
-
-
-  backend-deploy:
-
-    name: Deploy Backend
-    needs: backend-build
-    runs-on: ubuntu-latest
-
-
-    steps:
-
-      - name: Configure AWS credentials using OIDC
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::<ACCOUNT_ID>:role/github-actions-role
-          aws-region: ${{ env.AWS_REGION }}
-
-
-      - name: Trigger EC2 deployment
-        run: |
-
-          aws ssm send-command \
-          --document-name "AWS-RunShellScript" \
-          --targets "Key=tag:Name,Values=employee-backend" \
-          --parameters 'commands=[
-            "mkdir -p /opt/backend",
-            "cd /opt/backend",
-            "aws s3 cp s3://${{ env.S3_BUCKET }}/backend/${{ env.BACKEND_ZIP }} .",
-            "rm -rf app",
-            "mkdir app",
-            "unzip -o backend.zip -d app",
-            "cd app",
-            "npm ci --omit=dev",
-            "pm2 restart backend || pm2 start server.js --name backend"
-          ]' \
-          --region ${{ env.AWS_REGION }}
+    - name: Create backend package
+      run: |
+        cd app/backend
+        zip -r ../../backend.zip . \
+        -x "node_modules/*" \
+        -x "*.log"
