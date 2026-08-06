@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths: 
-      - "app/backend/**"
+      - "backend/**"
 
 permissions:
   id-token: write
@@ -23,7 +23,7 @@ jobs:
     name: Build Backend
     runs-on: ubuntu-latest
 
-    
+
     steps:
 
       - name: Building Backend
