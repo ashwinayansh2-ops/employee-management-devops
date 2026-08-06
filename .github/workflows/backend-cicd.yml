@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-   
 
 permissions:
   id-token: write
@@ -15,6 +14,7 @@ env:
   S3_BUCKET: employeeapplicationdst
   BACKEND_ZIP: backend.zip
 
+
 jobs:
 
   backend-build:
@@ -22,17 +22,11 @@ jobs:
     name: Build Backend
     runs-on: ubuntu-latest
 
-
     steps:
-
-      - name: Building Backend
-        run: |
-         cd ../app/backend
-         npm install
-         npm run build
 
       - name: Checkout code
         uses: actions/checkout@v4
+
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -47,6 +41,11 @@ jobs:
         run: npm ci
 
 
+      - name: Build Backend
+        working-directory: app/backend
+        run: npm run build
+
+
       - name: Run tests
         working-directory: app/backend
         run: |
@@ -57,8 +56,8 @@ jobs:
 
       - name: Create backend package
         run: |
-          cd backend
-          zip -r ../${{ env.BACKEND_ZIP }} . \
+          cd app/backend
+          zip -r ../../${{ env.BACKEND_ZIP }} . \
           -x "node_modules/*" \
           -x "*.log"
 
@@ -99,7 +98,8 @@ jobs:
           aws ssm send-command \
           --document-name "AWS-RunShellScript" \
           --targets "Key=tag:Name,Values=employee-backend" \
-          --parameters commands='[
+          --parameters 'commands=[
+            "mkdir -p /opt/backend",
             "cd /opt/backend",
             "aws s3 cp s3://${{ env.S3_BUCKET }}/backend/${{ env.BACKEND_ZIP }} .",
             "rm -rf app",
