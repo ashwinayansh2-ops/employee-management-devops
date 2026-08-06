@@ -90,3 +90,29 @@ jobs:
     - name: Verify S3 upload
       run: |
        aws s3 ls s3://${{ env.S3_BUCKET }}/backend/
+
+
+    - name: Deploy to EC2 using SSM
+      run: |
+        COMMAND_ID=$(aws ssm send-command \
+          --document-name "AWS-RunShellScript" \
+          --targets "Key=tag:Name,Values=employee-backend" \
+          --parameters 'commands=[
+            "mkdir -p /opt/backend",
+            "cd /opt/backend",
+            "aws s3 cp s3://'${{ env.S3_BUCKET }}'/'${{ env.BACKEND_ZIP }}' .",
+            "rm -rf app",
+            "mkdir app",
+            "unzip -o backend.zip -d app",
+            "cd app",
+            "npm ci --omit=dev",
+            "pm2 restart backend || pm2 start src/server.js --name backend"
+          ]' \
+          --query "Command.CommandId" \
+          --output text)
+
+        echo "Command ID: $COMMAND_ID"
+
+        aws ssm list-command-invocations \
+          --command-id "$COMMAND_ID" \
+          --details
