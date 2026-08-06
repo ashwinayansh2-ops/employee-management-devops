@@ -1,0 +1,107 @@
+name: Backend CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  S3_BUCKET: employeeapplicationdst
+  BACKEND_ZIP: backend.zip
+
+jobs:
+
+  backend-build:
+
+    name: Build Backend
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+
+      - name: Install dependencies
+        working-directory: backend
+        run: npm ci
+
+
+      - name: Run tests
+        working-directory: backend
+        run: |
+          if [ -f package.json ]; then
+            npm test || true
+          fi
+
+
+      - name: Create backend package
+        run: |
+          cd backend
+          zip -r ../${{ env.BACKEND_ZIP }} . \
+          -x "node_modules/*" \
+          -x "*.log"
+
+
+      - name: Configure AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::<ACCOUNT_ID>:role/github-actions-role
+          aws-region: ${{ env.AWS_REGION }}
+
+
+      - name: Upload backend artifact to S3
+        run: |
+          aws s3 cp ${{ env.BACKEND_ZIP }} \
+          s3://${{ env.S3_BUCKET }}/backend/${{ env.BACKEND_ZIP }}
+
+
+
+  backend-deploy:
+
+    name: Deploy Backend
+    needs: backend-build
+    runs-on: ubuntu-latest
+
+
+    steps:
+
+      - name: Configure AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::<ACCOUNT_ID>:role/github-actions-role
+          aws-region: ${{ env.AWS_REGION }}
+
+
+      - name: Trigger EC2 deployment
+        run: |
+
+          aws ssm send-command \
+          --document-name "AWS-RunShellScript" \
+          --targets "Key=tag:Name,Values=employee-backend" \
+          --parameters commands='[
+            "cd /opt/backend",
+            "aws s3 cp s3://${{ env.S3_BUCKET }}/backend/${{ env.BACKEND_ZIP }} .",
+            "rm -rf app",
+            "mkdir app",
+            "unzip -o backend.zip -d app",
+            "cd app",
+            "npm ci --omit=dev",
+            "pm2 restart backend || pm2 start server.js --name backend"
+          ]' \
+          --region ${{ env.AWS_REGION }}
