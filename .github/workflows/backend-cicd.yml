@@ -144,7 +144,7 @@ jobs:
           --parameters 'commands=[
             "mkdir -p /opt/backend",
             "cd /opt/backend",
-            "aws s3 cp s3://'${{ env.S3_BUCKET }}'/backend/backend.zip .",
+            "aws s3 cp s3://'${{ env.S3_BUCKET }}'/backend.zip .",
             "rm -rf app",
             "mkdir app",
             "unzip -o backend.zip -d app",
