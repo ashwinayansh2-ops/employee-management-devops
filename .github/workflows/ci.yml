@@ -105,6 +105,7 @@ jobs:
               "MinHealthyPercentage":50,
               "InstanceWarmup":120
             }'
+            
 
       - name: Wait for Instance Refresh to complete
         run: |
